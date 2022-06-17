@@ -9,7 +9,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from cnn import *
 from mlp import *
 from lstm import *
-from bi_lstm import *
+from lstm_att import *
+#from bi_lstm import *
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, RandomizedSearchCV
@@ -19,7 +20,6 @@ import matplotlib.pyplot as plt
 
 np.random.seed(5)
 tf.random.set_seed(5)
-
 
 #----------------------------------------
 def k_fold_cv (X, y, n_folds, classifier, params_dict):
@@ -109,8 +109,8 @@ def summarize_features_importance (features, importance, lag = True):
 #----------------------------------------
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--model", "-m", choices = ["mlp", "lstm", "bi-lstm", "cnn", "RF"])
-	parser.add_argument("--type", "-t", choices = ["ling", "ling_80", "fbank"])
+	parser.add_argument("--model", "-m", choices = ["mlp", "lstm", "att-lstm", "cnn", "RF"])
+	parser.add_argument("--type", "-t", choices = ["ling", "fbank"])
 	args = parser.parse_args()
 
 	try:
@@ -126,6 +126,7 @@ if __name__ == '__main__':
 	X = data. values[:,1:]
 	y = data. values[:,0]
 
+	n_features = int (X.shape[1] / lag)
 	features_results = []
 	if args. model == "cnn":
 		model = CNN_WRAP (lag)
@@ -143,23 +144,23 @@ if __name__ == '__main__':
 		features, importances = summarize_features_importance (reduced_colnames, weights, lag=False)
 		features_results. append ([args. model, features, importances])
 
-	elif args. model == "bi-lstm":
-		model = BiLSTM_WRAP (lag)
+
+	elif args. model == "att-lstm":
+		model = LSTM_ATT (lag, n_features)
 
 		model.fit (X, y, epochs = 20, batch_size = 32, verbose = 0, shuffle = True)
-		model. save ("trained_models/bi_lstm_%s"%args.type)
+		model. save_weights ("trained_models/att_lstm_%s.h5"%args.type)
 
 		weights = model. get_normalized_weights ()
 
 		reduced_colnames = list (set ([('_'). join (a. split ('_')[:-1]) for a in colnames]))
 		features, importances = summarize_features_importance (reduced_colnames, weights, lag=False)
 		features_results. append ([args. model, features, importances])
-
-
 		model. summary ()
+
 	elif args. model == "mlp":
 		model = MLP_WRAP (lag)
-		model.fit (X, y, epochs = 15, batch_size = 32, verbose = 0, shuffle = True)
+		model.fit (X, y, epochs = 29, batch_size = 32, verbose = 0, shuffle = True)
 		weights = model.get_normalized_weights ()
 		features, importances = summarize_features_importance (colnames, weights)
 		features_results. append ([args. model, features, importances])

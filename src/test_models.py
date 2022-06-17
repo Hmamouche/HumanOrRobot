@@ -9,7 +9,7 @@ from sklearn.metrics import f1_score,  balanced_accuracy_score, recall_score
 from cnn import *
 from mlp import *
 from lstm import *
-from bi_lstm import *
+from lstm_att import *
 
 from normalizer import normalizer
 
@@ -33,7 +33,7 @@ def pred_real_scores (real, cont_pred, threshold):
 #-------------------------------------
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--model", "-m", choices = ["mlp", "lstm","bi-lstm", "cnn", "RF"])
+	parser.add_argument("--model", "-m", choices = ["mlp", "lstm","att-lstm", "cnn", "RF"])
 	parser.add_argument("--type", "-t", choices = ["ling", "ling_80", "fbank"])
 	parser.add_argument("--remove", "-rm", help="remove last results.", action="store_true")
 	args = parser.parse_args()
@@ -43,6 +43,7 @@ if __name__ == '__main__':
 	test_data = test_data. values
 	X = test_data[:,1:]
 	y = test_data[:,0]
+	n_features = int (X.shape[1] / lag)
 
 	if args. model == "cnn":
 		model = CNN_WRAP (lag)
@@ -52,9 +53,9 @@ if __name__ == '__main__':
 		model = LSTM_WRAP (lag)
 		model. load ("trained_models/lstm_%s"%args.type)
 		model. summary ()
-	elif args. model == "bi-lstm":
-		model = BiLSTM_WRAP (lag)
-		model. load ("trained_models/bi_lstm_%s"%args.type)
+	elif args. model == "att-lstm":
+		model = LSTM_ATT (lag, n_features)
+		model. load_weights ("trained_models/att_lstm_%s.h5"%args.type)
 		model. summary ()
 	elif args. model == "mlp":
 		model = MLP_WRAP (lag)
@@ -65,10 +66,13 @@ if __name__ == '__main__':
 
 	# make predictions and compute the scores
 	predictions = model. predict (X)
+	print (y.shape, predictions.shape)
+
+
 	if args. model == "RF":
 		seuils = [None]
 	else:
-		seuils = [0.3, 0.4, 0.5, 0.6, 0.7]
+		seuils = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9]
 
 	results = []
 	for seuil in seuils:

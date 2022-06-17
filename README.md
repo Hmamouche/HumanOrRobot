@@ -8,12 +8,12 @@ Only the intermediate extracted features from raw data that are available in thi
 
 - Using linguistic features:
 ```bash
-python src/train_models.py -t ling -m lstm
+python src/train_models.py -t ling -m att-lstm
 ```
 
 - Using filter banks features
 ```bash
-python src/train_models.py -t ling -m lstm
+python src/train_models.py -t ling -m att-lstm
 ```
 - __Remarque__: use python src/train_models.py -h to train more models.
 
@@ -21,10 +21,10 @@ python src/train_models.py -t ling -m lstm
 
 - Usinglinguistic features
 ```bash
-python src/test_models.py -t ling -m lstm
+python src/test_models.py -t ling -m att-lstm
 ```
 
 - Using filter banks features
 ```bash
-python src/test_models.py -t ling -m lstm
+python src/test_models.py -t ling -m att-lstm
 ```
